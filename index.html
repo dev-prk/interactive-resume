@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Resume - Database Administrator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: A single-page, vertical-scrolling application designed to narrate a career journey. The structure begins with a high-level summary (Hero), followed by an interactive career timeline to show growth. It then dives into thematic sections for Core Expertise (On-Prem, Cloud, Automation) using a tabbed interface for clarity. Key achievements are highlighted visually, and a dynamic chart visualizes the technical skills. A new section is added for a Gemini-powered cover letter generator to provide a practical tool. This structure was chosen to guide the user from a broad overview to specific details in a logical, engaging flow, prioritizing storytelling and usability over a simple chronological list. -->
+    <!-- Visualization & Content Choices: 
+        - Career Journey: (Goal: Show Growth) -> An interactive vertical timeline using HTML/CSS. (Interaction: Clicking a role reveals details). (Justification: Visually represents the "upgrade" concept and career progression effectively).
+        - Core Expertise: (Goal: Organize) -> A tabbed content area using JS. (Interaction: Click tabs to switch content). (Justification: Prevents information overload and neatly categorizes distinct skill areas).
+        - Key Achievements: (Goal: Inform/Impact) -> Icon-driven cards in a grid layout. (Interaction: Subtle hover effects). (Justification: Makes quantifiable results stand out and easily digestible).
+        - Technical Skills: (Goal: Compare/Inform) -> A horizontal bar chart via Chart.js. (Interaction: Animated on load, tooltips on hover). (Justification: More engaging and provides a clearer sense of proficiency distribution than a static list).
+        - Cover Letter Generator: (Goal: Utility) -> Text input, button, and text area for output. (Interaction: User input triggers an API call). (Justification: Provides a high-value, practical feature that leverages the resume data).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF7;
+            color: #4A4A4A;
+        }
+        .active-tab {
+            border-bottom-color: #A0522D;
+            color: #A0522D;
+            font-weight: 500;
+        }
+        .inactive-tab {
+            border-bottom-color: transparent;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #E6DACE;
+            border: 4px solid #FDFBF7;
+        }
+        .timeline-item.active::before {
+            background-color: #A0522D;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 500px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border-left-color: #A0522D;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+
+        <!-- Header/Hero Section -->
+        <header id="home" class="text-center mb-16 md:mb-24">
+            <h1 class="text-4xl md:text-6xl font-bold text-[#363636] tracking-tight">Database Administrator</h1>
+            <p class="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-gray-600">A visual journey through my experience in database management, automation, and cloud technologies.</p>
+            <div id="summary-text" class="mt-6 max-w-3xl mx-auto text-base text-gray-700 bg-white/50 p-6 rounded-lg shadow-sm border border-gray-200">
+                Results-driven professional with over 3 years of hands-on experience managing and optimizing complex database environments. Proven expertise in the end-to-end lifecycle of both on-premise (DB2 LUW) and cloud-native (MySQL on AWS RDS) databases, from high availability and performance tuning to security and automation. A skilled problem-solver who excels in cross-functional collaboration with DevOps and SRE teams to support critical business operations and drive significant efficiency gains.
+            </div>
+        </header>
+
+        <main>
+            <!-- Career Journey Section -->
+            <section id="journey" class="mb-16 md:mb-24">
+                <h2 class="text-3xl font-bold text-center mb-12 text-[#363636]">My Career Journey</h2>
+                <div class="relative max-w-2xl mx-auto border-l-2 border-gray-200 pl-8">
+                    <!-- Timeline Item 1 -->
+                    <div class="timeline-item active mb-12 cursor-pointer" onclick="showJourneyDetail('pmo')">
+                        <h3 class="text-xl font-semibold text-[#A0522D]">PMO Coordinator</h3>
+                        <p class="text-sm text-gray-500">Aug 2021 – Dec 2022</p>
+                        <p class="mt-2 text-gray-700">Started by leading high-stakes incident calls and automating system monitoring, building a foundation in operational oversight and leadership.</p>
+                    </div>
+                    <!-- Timeline Item 2 -->
+                    <div class="timeline-item mb-12 cursor-pointer" onclick="showJourneyDetail('automation')">
+                        <h3 class="text-xl font-semibold text-gray-800">Automation Engineer</h3>
+                        <p class="text-sm text-gray-500">Aug 2021 – Jun 2023</p>
+                        <p class="mt-2 text-gray-700">Evolved into an automation-focused role, using Python and Selenium to drive efficiency and unlock new business capabilities.</p>
+                    </div>
+                    <!-- Timeline Item 3 -->
+                    <div class="timeline-item cursor-pointer" onclick="showJourneyDetail('dba')">
+                        <h3 class="text-xl font-semibold text-gray-800">Database Administrator</h3>
+                        <p class="text-sm text-gray-500">Dec 2022 – Dec 2024</p>
+                        <p class="mt-2 text-gray-700">Culminated in a core DBA role, managing the full lifecycle of on-prem and cloud databases with a focus on performance and reliability.</p>
+                    </div>
+                </div>
+                <!-- Journey Detail Display -->
+                <div id="journey-detail" class="mt-12 max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md border border-gray-200 transition-all duration-500">
+                    <!-- Content will be injected by JS -->
+                </div>
+            </section>
+
+            <!-- Core Expertise Section -->
+            <section id="expertise" class="mb-16 md:mb-24">
+                <h2 class="text-3xl font-bold text-center mb-12 text-[#363636]">Core Expertise</h2>
+                <div class="max-w-4xl mx-auto">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex space-x-4 sm:space-x-8 -mb-px" aria-label="Tabs">
+                            <button id="tab-onprem" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm sm:text-base active-tab" onclick="switchTab('onprem')">On-Premise DB Management</button>
+                            <button id="tab-cloud" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm sm:text-base inactive-tab" onclick="switchTab('cloud')">Cloud & DBaaS</button>
+                            <button id="tab-auto" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm sm:text-base inactive-tab" onclick="switchTab('auto')">Automation & Scripting</button>
+                        </nav>
+                    </div>
+                    <div id="tab-content" class="mt-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <!-- Content will be injected by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Achievements Section -->
+            <section id="achievements" class="mb-16 md:mb-24">
+                <h2 class="text-3xl font-bold text-center mb-12 text-[#363636]">Impact & Achievements</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
+                        <div class="text-4xl text-[#A0522D] mb-2">⏱️</div>
+                        <h3 class="text-xl font-semibold text-gray-800">Operational Efficiency</h3>
+                        <p class="mt-2 text-gray-700">Automated monitoring and reporting scripts, saving approximately <span class="font-bold">12+ hours per week</span> in manual DBA tasks.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
+                        <div class="text-4xl text-[#A0522D] mb-2">📈</div>
+                        <h3 class="text-xl font-semibold text-gray-800">Business Growth</h3>
+                        <p class="mt-2 text-gray-700">Delivered data-driven Tableau dashboards that directly contributed to a <span class="font-bold">5-year client contract extension</span>.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
+                        <div class="text-4xl text-[#A0522D] mb-2">🛡️</div>
+                        <h3 class="text-xl font-semibold text-gray-800">Service Stability</h3>
+                        <p class="mt-2 text-gray-700">Executed seamless database failovers during production patching, maintaining <span class="font-bold">continuous service availability</span>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Technical Skills Chart Section -->
+            <section id="skills" class="mb-16 md:mb-24">
+                <h2 class="text-3xl font-bold text-center mb-12 text-[#363636]">Technical Skills Overview</h2>
+                <p class="text-center max-w-2xl mx-auto mb-8 text-gray-600">This chart provides a visual representation of my proficiency across key technologies. Hover over the bars for more details.</p>
+                <div class="chart-container">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Gemini-powered Cover Letter Section -->
+            <section id="cover-letter-generator" class="mb-16 md:mb-24">
+                <h2 class="text-3xl font-bold text-center mb-12 text-[#363636]">AI Cover Letter Generator</h2>
+                <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <p class="text-gray-700 mb-4">Enter a job title below and click the button to generate a personalized cover letter draft based on your experience.</p>
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                        <input type="text" id="jobTitleInput" placeholder="e.g., Senior Database Administrator" class="flex-grow p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#A0522D]">
+                        <button id="generateBtn" onclick="generateCoverLetter()" class="flex-shrink-0 bg-[#A0522D] text-white py-3 px-6 rounded-lg font-semibold hover:bg-opacity-90 transition-colors duration-200 flex items-center justify-center">
+                            Generate Cover Letter ✨
+                        </button>
+                    </div>
+                    <div id="coverLetterOutput" class="min-h-[200px] p-4 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 whitespace-pre-wrap">
+                        Your generated cover letter will appear here.
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+    </div>
+
+    <script>
+        const resumeData = {
+            journey: {
+                pmo: {
+                    title: "Leadership & Coordination",
+                    content: "Led major incident management calls for issues with a business impact of over $1M. Coordinated cross-functional teams to identify pain points and define clear action plans, demonstrating leadership and communication skills in high-pressure situations. Monitored 26+ critical service dashboards (Kafka, SCM, Finance) and automated the monitoring process."
+                },
+                automation: {
+                    title: "Automation & Business Impact",
+                    content: "Independently learned Python and Selenium to automate Outlook email parsing and web scraping for alerts and reports. Developed and deployed Bash scripts for automated daily backups and health reports. These initiatives directly led to a 50% reduction in daily manual effort, enabling the team to take on new PMO responsibilities."
+                },
+                dba: {
+                    title: "Core Database Administration",
+                    content: "Managed the full lifecycle of on-premise DB2 LUW and cloud-based AWS RDS (MySQL) databases. Implemented HADR, executed backup/recovery, and performed advanced query tuning, reclaiming 40-60 GB of storage per cycle. Supported CI/CD releases and executed critical failover/takeover procedures during production patching."
+                }
+            },
+            expertise: {
+                onprem: {
+                    title: "On-Premise Database Management (DB2 LUW)",
+                    points: [
+                        "Established robust database foundations by implementing and managing HADR (High Availability Disaster Recovery) configurations.",
+                        "Executed comprehensive backup and recovery strategies, including rollforward recovery, ensuring business continuity.",
+                        "Performed in-depth query performance tuning using db2expln and db2batch, reducing query costs and improving system response times.",
+                        "Consistently reclaimed 40-60 GB of storage per optimization cycle by running db2reorg and db2runstats.",
+                        "Executed db2 failover and takeover procedures during critical Linux patching events, ensuring minimal disruption."
+                    ]
+                },
+                cloud: {
+                    title: "Cloud & Database as a Service (AWS RDS)",
+                    points: [
+                        "Managed the entire lifecycle of MySQL instances on Amazon RDS, from provisioning and configuration to decommissioning.",
+                        "Handled automated backups, applied security patches, and configured auditing to meet compliance standards.",
+                        "Implemented encryption during database creation to ensure data security at-rest.",
+                        "Utilized CloudWatch for a holistic view of database health, monitoring job status, resource consumption, and alerts.",
+                        "Migrated databases across virtual environments using Azure AzCopy, maintaining 100% data integrity."
+                    ]
+                },
+                auto: {
+                    title: "Automation & DevOps Support",
+                    points: [
+                        "Developed and deployed Bash scripts for automated daily backups, health reports, and disk utilization checks.",
+                        "Automated Outlook email parsing and web scraping for alerts using Python and Selenium.",
+                        "Supported DevOps teams by providing packages for CI/CD releases, syncing environments, and validating logs.",
+                        "Scheduled automated tasks and maintenance jobs using Cronjobs on Linux systems.",
+                        "Reduced manual effort by approximately 50% for routine operational monitoring through custom automation."
+                    ]
+                }
+            },
+            skills: {
+                labels: ['DB2 LUW', 'MySQL (AWS RDS)', 'Bash Scripting', 'Python', 'SQL', 'HADR', 'Performance Tuning', 'CloudWatch', 'Selenium'],
+                data: [90, 85, 95, 80, 95, 85, 90, 80, 75]
+            }
+        };
+
+        let retryCount = 0;
+        const maxRetries = 5;
+        const baseDelay = 1000;
+
+        async function fetchWithExponentialBackoff(apiUrl, payload) {
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.status === 429 && retryCount < maxRetries) {
+                    retryCount++;
+                    const delay = baseDelay * Math.pow(2, retryCount - 1);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithExponentialBackoff(apiUrl, payload);
+                } else if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+                retryCount = 0;
+                return response.json();
+            } catch (error) {
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    const delay = baseDelay * Math.pow(2, retryCount - 1);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithExponentialBackoff(apiUrl, payload);
+                } else {
+                    throw error;
+                }
+            }
+        }
+
+        async function generateCoverLetter() {
+            const jobTitle = document.getElementById('jobTitleInput').value.trim();
+            const outputDiv = document.getElementById('coverLetterOutput');
+            const generateBtn = document.getElementById('generateBtn');
+
+            if (!jobTitle) {
+                outputDiv.innerText = "Please enter a job title to generate a cover letter.";
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<div class="spinner"></div> Generating...';
+
+            outputDiv.innerText = "Generating your cover letter draft...";
+
+            const resumeContent = `
+                Professional Summary: ${document.getElementById('summary-text').innerText}
+                
+                Core Experience:
+                - PMO Coordinator: ${resumeData.journey.pmo.content}
+                - Automation Engineer: ${resumeData.journey.automation.content}
+                - Database Administrator: ${resumeData.journey.dba.content}
+                
+                On-Premise DB Management Skills:
+                ${resumeData.expertise.onprem.points.join('\n- ')}
+
+                Cloud & DBaaS Skills:
+                ${resumeData.expertise.cloud.points.join('\n- ')}
+                
+                Automation & DevOps Support Skills:
+                ${resumeData.expertise.auto.points.join('\n- ')}
+
+                Key Achievements:
+                - Operational Efficiency: Automated monitoring and reporting scripts, saving ~12+ hours weekly in manual effort.
+                - Business Growth: Delivered Tableau dashboards with historical storage trend analysis, leading to a 5-year client contract extension.
+                - Service Stability: Executed database failovers during production patching events, maintaining continuous service availability.
+            `;
+
+            const prompt = `Based on the following resume data, draft a professional and concise cover letter for a job as a "${jobTitle}". Highlight the most relevant skills and experience for this role.
+
+            Resume Data:
+            ${resumeContent}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }]
+            };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const result = await fetchWithExponentialBackoff(apiUrl, payload);
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    outputDiv.innerText = text;
+                } else {
+                    outputDiv.innerText = "Failed to generate a cover letter. Please try again.";
+                }
+            } catch (error) {
+                outputDiv.innerText = `An error occurred: ${error.message}`;
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = 'Generate Cover Letter ✨';
+            }
+        }
+
+        function showJourneyDetail(role) {
+            const detailContainer = document.getElementById('journey-detail');
+            const data = resumeData.journey[role];
+            detailContainer.innerHTML = `<h4 class="text-lg font-semibold mb-2 text-[#A0522D]">${data.title}</h4><p class="text-gray-700">${data.content}</p>`;
+            document.querySelectorAll('.timeline-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[onclick="showJourneyDetail('${role}')"]`).classList.add('active');
+        }
+
+        function switchTab(tabName) {
+            const contentContainer = document.getElementById('tab-content');
+            const data = resumeData.expertise[tabName];
+            let contentHtml = `<h4 class="text-lg font-semibold mb-4 text-gray-800">${data.title}</h4><ul class="space-y-3 list-disc list-inside text-gray-700">`;
+            data.points.forEach(point => {
+                contentHtml += `<li>${point}</li>`;
+            });
+            contentHtml += `</ul>`;
+            contentContainer.innerHTML = contentHtml;
+            document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+                tab.classList.remove('active-tab');
+                tab.classList.add('inactive-tab');
+            });
+            document.getElementById(`tab-${tabName}`).classList.add('active-tab');
+            document.getElementById(`tab-${tabName}`).classList.remove('inactive-tab');
+        }
+
+        window.onload = function() {
+            showJourneyDetail('pmo');
+            switchTab('onprem');
+            const ctx = document.getElementById('skillsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: resumeData.skills.labels,
+                    datasets: [{
+                        label: 'Proficiency',
+                        data: resumeData.skills.data,
+                        backgroundColor: 'rgba(160, 82, 45, 0.7)',
+                        borderColor: 'rgba(160, 82, 45, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                           grid: {
+                                color: '#E6DACE'
+                           }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Proficiency: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+</html>
+
+"Final commit of interactive resume"
